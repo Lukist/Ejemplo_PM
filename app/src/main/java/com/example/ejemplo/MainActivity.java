@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,13 +13,17 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.ejemplo.modelos.User;
+
 public class MainActivity extends AppCompatActivity {
 
     EditText input_usuario, input_contrasena;
     Button btn_ingresar;
 
 
-    String usuario, contraseña;
+    String nombreUsuario, contraseña;
+
+    DBHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-        usuario = "";
+        nombreUsuario = "";
         contraseña = "";
 
 
@@ -39,16 +44,31 @@ public class MainActivity extends AppCompatActivity {
         input_contrasena = findViewById(R.id.main__input_contrasena);
         btn_ingresar = findViewById(R.id.main__button_ingresar);
 
+        dbHelper = new DBHelper(MainActivity.this);
+
+        User usuarioNuevo = new User(0, "admin", "admin");
+
+        long id = dbHelper.addUser(usuarioNuevo);
+
         btn_ingresar.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                usuario = input_usuario.getText().toString();
+                nombreUsuario = input_usuario.getText().toString();
                 contraseña = input_contrasena.getText().toString();
 
-                if (usuario.equals("admin") && contraseña.equals("admin")) {
-                    Intent intent = new Intent(MainActivity.this, Principal.class);
-                    startActivity(intent);
-                }
+                User usuarioIngresado = dbHelper.comprobarUsuarioLocal(nombreUsuario, contraseña);
+
+
+
+                    if(usuarioIngresado.getId() != -1) {
+                        Intent intent = new Intent(MainActivity.this, Principal.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(MainActivity.this, "Usuario no existe", Toast.LENGTH_SHORT).show();
+                    }
+
+
+
 
             }
         });
