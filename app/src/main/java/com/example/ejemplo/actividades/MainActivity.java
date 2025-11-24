@@ -147,33 +147,76 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    /**
+     * --- MÉTODO DE AYUDA PARA POBLAR LA BASE DE DATOS ---
+     *
+     * `populateTestUsers` es una función de utilidad diseñada para facilitar las pruebas de la aplicación.
+     * Su objetivo es crear y añadir un número específico de usuarios de prueba a la base de datos
+     * de forma automática.
+     *
+     * Una característica clave es que **evita crear duplicados**: antes de insertar un nuevo usuario,
+     * comprueba si ya existe uno con el mismo nombre.
+     *
+     * Al final, muestra un resumen de cuántos usuarios se insertaron y cuántos se omitieron
+     * (porque ya existían), tanto en el Logcat como en un mensaje Toast en pantalla.
+     *
+     * @param count La cantidad de usuarios de prueba que se intentarán crear.
+     */
     private void populateTestUsers(int count) {
+        // --- Validación Inicial ---
+        // Si el número de usuarios a crear es cero o negativo, no hacemos nada y salimos del método.
         if (count <= 0) return;
 
+        // --- Contadores ---
+        // `inserted`: Lleva la cuenta de los nuevos usuarios que se han añadido con éxito.
+        // `skipped`: Lleva la cuenta de los usuarios que se omitieron porque ya existían en la BD.
         int inserted = 0;
         int skipped = 0;
 
+        // --- Bucle de Creación de Usuarios ---
+        // Iteramos desde 1 hasta el número (`count`) de usuarios que queremos crear.
         for (int i = 1; i <= count; i++) {
+            // Creamos un nombre de usuario único para cada iteración, ej: "usuario_test1", "usuario_test2", etc.
             String username = "usuario_test" + i;
+
+            // --- Verificación de Duplicados ---
+            // Antes de insertar, usamos el `DBHelper` para buscar si ya existe un usuario con este `username`.
             User existing = dbHelper.getUserByUsername(username);
+
+            // Si `existing` no es nulo y su ID no es -1, significa que el usuario ya existe.
             if (existing != null && existing.getId() != -1) {
-                skipped++;
-                continue;
+                skipped++; // Incrementamos el contador de omitidos.
+                continue;  // `continue` salta al siguiente ciclo del bucle, ignorando el resto del código.
             }
 
+            // --- Inserción del Nuevo Usuario ---
+            // Si el usuario no existía, creamos un nuevo objeto `User`.
+            // El ID se pone en 0 porque la base de datos lo generará automáticamente (autoincremental).
             User usuarioNuevo = new User(0, username, "pass" + i);
+
+            // Llamamos a `addUser` para insertar el nuevo usuario en la base de datos.
+            // El método devuelve el ID del nuevo usuario si fue exitoso, o -1 si hubo un error.
             long id = dbHelper.addUser(usuarioNuevo);
+
+            // Verificamos el resultado de la inserción.
             if (id != -1) {
-                inserted++;
+                inserted++; // Si el ID es válido, incrementamos el contador de insertados.
             } else {
-                Log.w("Prueba", "Failed to insert user: " + username);
+                // Si hubo un error, lo registramos en el Logcat para depuración.
+                Log.w("Prueba", "Falló la inserción del usuario: " + username);
             }
         }
 
+        // --- Feedback Final ---
+        // Creamos un mensaje que resume la operación.
+        String message = "Usuarios de prueba: insertados=" + inserted + " omitidos=" + skipped;
 
-        String message = "Test users: inserted=" + inserted + " skipped=" + skipped;
+        // Mostramos el mensaje en el Logcat (visible para desarrolladores en Android Studio).
         Log.i("Prueba", message);
+        // Mostramos un mensaje Toast en la pantalla (visible para el usuario final).
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
+
 
 }
