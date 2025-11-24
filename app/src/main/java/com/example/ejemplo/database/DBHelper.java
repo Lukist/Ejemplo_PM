@@ -13,6 +13,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
      ██████╗ ██████╗     ██╗  ██╗███████╗██╗     ██████╗ ███████╗██████╗
@@ -226,5 +228,57 @@ public class DBHelper extends SQLiteAssetHelper {
         int rowsDeleted = db.delete(TABLE_USUARIO, COL_NOMBRE + " = ?", new String[]{nombreUsuario});
         db.close();
         return rowsDeleted;
+    }
+
+    public List<User> getAllUsers() {
+        List<User> users = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            String query = "SELECT * FROM " + TABLE_USUARIO;
+            cursor = db.rawQuery(query, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    User user = new User();
+                    user.setId(cursor.getLong(cursor.getColumnIndexOrThrow(COL_ID)));
+                    user.setNombreUsuario(cursor.getString(cursor.getColumnIndexOrThrow(COL_NOMBRE)));
+                    user.setPassword(cursor.getString(cursor.getColumnIndexOrThrow(COL_PASSWORD)));
+                    users.add(user);
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) cursor.close();
+            db.close();
+        }
+
+        return users;
+    }
+
+    public List<User> getAllUsersSafe() {
+        List<User> users = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor cursor = null;
+
+        try {
+            String query = "SELECT " + COL_ID + ", " + COL_NOMBRE + " FROM " + TABLE_USUARIO;
+            cursor = db.rawQuery(query, null);
+
+            if (cursor != null && cursor.moveToFirst()) {
+                do {
+                    User user = new User();
+                    user.setId(cursor.getLong(cursor.getColumnIndexOrThrow(COL_ID)));
+                    user.setNombreUsuario(cursor.getString(cursor.getColumnIndexOrThrow(COL_NOMBRE)));
+                    user.setPassword(null); // intentionally blank
+                    users.add(user);
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            if (cursor != null) cursor.close();
+            db.close();
+        }
+
+        return users;
     }
 }

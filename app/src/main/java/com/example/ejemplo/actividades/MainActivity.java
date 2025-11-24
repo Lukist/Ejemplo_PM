@@ -2,6 +2,7 @@ package com.example.ejemplo.actividades;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -108,8 +109,9 @@ public class MainActivity extends AppCompatActivity {
          *   | admin   |  <- usuario de prueba
          *   +---------+
          */
-        User usuarioNuevo = new User(0, "admin", "admin");
-        long id = dbHelper.addUser(usuarioNuevo); // id devuelto por sqlite (o -1 si falla)
+
+
+        populateTestUsers(10);
 
         // Listener del botón de ingresar
         btn_ingresar.setOnClickListener(new View.OnClickListener() {
@@ -144,4 +146,34 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
+    private void populateTestUsers(int count) {
+        if (count <= 0) return;
+
+        int inserted = 0;
+        int skipped = 0;
+
+        for (int i = 1; i <= count; i++) {
+            String username = "usuario_test" + i;
+            User existing = dbHelper.getUserByUsername(username);
+            if (existing != null && existing.getId() != -1) {
+                skipped++;
+                continue;
+            }
+
+            User usuarioNuevo = new User(0, username, "pass" + i);
+            long id = dbHelper.addUser(usuarioNuevo);
+            if (id != -1) {
+                inserted++;
+            } else {
+                Log.w("Prueba", "Failed to insert user: " + username);
+            }
+        }
+
+
+        String message = "Test users: inserted=" + inserted + " skipped=" + skipped;
+        Log.i("Prueba", message);
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+    }
+
 }
